@@ -248,6 +248,9 @@ public final class ResolveKitRuntime: ObservableObject {
     private var activeAssistantDraft = ""
     private var activeAssistantMessageID: UUID?
 
+    private var feedbackPromptDelayTask: Task<Void, Never>?
+    private static let feedbackPromptDelaySeconds: Double = 6
+
     private let toolBatchCoalescingDelayMilliseconds: UInt64 = 250
     private var collectingToolCalls: [ResolveKitToolCallRequest] = []
     private var collectionTask: Task<Void, Never>?
@@ -372,6 +375,7 @@ public final class ResolveKitRuntime: ObservableObject {
         isEscalated = false
         escalationReason = nil
         pendingFeedbackRequest = false
+        cancelPendingFeedbackPrompt()
         resetToolCallFlowForNewTurn()
     }
 
@@ -672,6 +676,8 @@ public final class ResolveKitRuntime: ObservableObject {
         activeAssistantDraft = ""
         activeAssistantMessageID = nil
         clearChatPresentationError()
+        cancelPendingFeedbackPrompt()
+        pendingFeedbackRequest = false
         resetToolCallFlowForNewTurn()
 
         do {
@@ -727,6 +733,7 @@ public final class ResolveKitRuntime: ObservableObject {
             return
         }
         pendingFeedbackRequest = false
+        cancelPendingFeedbackPrompt()
         do {
             _ = try await apiClient.submitFeedback(
                 sessionID: session.id,
@@ -741,6 +748,7 @@ public final class ResolveKitRuntime: ObservableObject {
     /// Dismiss the feedback prompt without submitting a rating.
     public func dismissFeedbackRequest() {
         pendingFeedbackRequest = false
+        cancelPendingFeedbackPrompt()
     }
 
     private func waitForReadyToSendMessage() async -> Bool {
@@ -1131,6 +1139,25 @@ public final class ResolveKitRuntime: ObservableObject {
         activeAssistantDraft = ""
     }
 
+    /// Show the CSAT prompt only after a short pause with no follow-up message,
+    /// so it doesn't interrupt an in-progress conversation.
+    private func scheduleFeedbackPrompt() {
+        feedbackPromptDelayTask?.cancel()
+        feedbackPromptDelayTask = Task { [weak self] in
+            guard let self else { return }
+            await ResolveKitCompatibility.sleep(seconds: Self.feedbackPromptDelaySeconds)
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                self.pendingFeedbackRequest = true
+            }
+        }
+    }
+
+    private func cancelPendingFeedbackPrompt() {
+        feedbackPromptDelayTask?.cancel()
+        feedbackPromptDelayTask = nil
+    }
+
     private func handleServerEnvelope(_ envelope: ResolveKitEnvelope) async {
         if isReloadingWithNewSession {
             ResolveKitRuntimeLogger.log("Suppressing server envelope during reload: \(envelope.type)")
@@ -1171,7 +1198,7 @@ public final class ResolveKitRuntime: ObservableObject {
                 messages.append(ResolveKitChatMessage(role: .humanAgent, text: payload.text))
             }
         case "feedback_requested":
-            pendingFeedbackRequest = true
+            scheduleFeedbackPrompt()
         case "error":
             if let payload: ResolveKitServerErrorPayload = decodePayload(envelope.payload) {
                 ResolveKitRuntimeLogger.log(
