@@ -527,6 +527,9 @@ public struct ResolveKitChatView: View {
             if let presentationError = runtime.chatPresentationError {
                 transientErrorBubble(presentationError)
             }
+            if runtime.isEscalated {
+                escalatedBanner
+            }
             if shouldShowThinkingIndicator {
                 thinkingIndicator
                     .transition(
@@ -535,6 +538,9 @@ public struct ResolveKitChatView: View {
                             removal: .opacity
                         )
                     )
+            }
+            if runtime.pendingFeedbackRequest {
+                feedbackPromptCard
             }
             bottomAnchorSpacer(reservedHeight: reservedHeight)
         }
@@ -642,12 +648,71 @@ public struct ResolveKitChatView: View {
         }
     }
 
-    private func messageRow(_ message: ResolveKitChatMessage) -> some View {
-        let isUser = message.role == .user
-        let bubble = Text(message.text)
+    private var escalatedBanner: some View {
+        HStack {
+            HStack(spacing: 6) {
+                ProgressView()
+                    .controlSize(.small)
+                Text("Connecting you with a human agent…")
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(resolvedPalette.statusTextColor)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(resolvedPalette.toolCardBackgroundColor)
+            .clipShape(Capsule())
+            Spacer(minLength: 24)
+        }
+    }
+
+    private var feedbackPromptCard: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("How did we do?")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(resolvedPalette.toolCardTitleColor)
+                HStack(spacing: 6) {
+                    ForEach(1...5, id: \.self) { rating in
+                        Button {
+                            Task { await runtime.submitFeedback(rating: rating) }
+                        } label: {
+                            Image(systemName: "star.fill")
+                                .foregroundStyle(resolvedPalette.statusTextColor)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    Spacer()
+                    Button("Dismiss") {
+                        runtime.dismissFeedbackRequest()
+                    }
+                    .font(.footnote)
+                    .buttonStyle(.plain)
+                    .foregroundStyle(resolvedPalette.statusTextColor)
+                }
+            }
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
+            .background(resolvedPalette.toolCardBackgroundColor)
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            Spacer(minLength: 24)
+        }
+    }
+
+    private func messageRow(_ message: ResolveKitChatMessage) -> some View {
+        let isUser = message.role == .user
+        let bubbleText = Text(message.text)
             .foregroundStyle(isUser ? resolvedPalette.userBubbleTextColor : resolvedPalette.assistantBubbleTextColor)
+
+        let bubble = VStack(alignment: .leading, spacing: 4) {
+            if message.role == .humanAgent {
+                Text("Support Agent")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(resolvedPalette.statusTextColor)
+            }
+            bubbleText
+        }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
             .background(
                 isUser
                     ? resolvedPalette.userBubbleBackgroundColor
@@ -673,7 +738,7 @@ public struct ResolveKitChatView: View {
             } else {
                 bubble
             }
-            if message.role == .assistant { Spacer(minLength: 24) }
+            if message.role != .user { Spacer(minLength: 24) }
         }
     }
 

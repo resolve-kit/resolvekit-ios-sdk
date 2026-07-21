@@ -139,6 +139,20 @@ public struct ResolveKitServerErrorPayload: Codable, Sendable, Equatable {
     public let recoverable: Bool
 }
 
+public struct ResolveKitSessionEscalatedPayload: Codable, Sendable, Equatable {
+    public let reason: String
+}
+
+public struct ResolveKitHumanMessagePayload: Codable, Sendable, Equatable {
+    public let messageID: String
+    public let text: String
+
+    enum CodingKeys: String, CodingKey {
+        case messageID = "message_id"
+        case text
+    }
+}
+
 public enum ResolveKitToolResultStatus: String, Codable, Sendable {
     case success
     case error
@@ -181,6 +195,7 @@ public struct ResolveKitChatMessage: Identifiable, Equatable, Sendable {
         case user
         case assistant
         case system
+        case humanAgent
     }
 
     public let id: UUID

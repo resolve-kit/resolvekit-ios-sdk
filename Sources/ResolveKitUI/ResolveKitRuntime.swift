@@ -208,6 +208,9 @@ public final class ResolveKitRuntime: ObservableObject {
     @Published public private(set) var chatTitle: String = "Support Chat"
     @Published public private(set) var messagePlaceholder: String = "Message"
     @Published public private(set) var initialFetchCompleted = false
+    @Published public private(set) var isEscalated: Bool = false
+    @Published public private(set) var escalationReason: String?
+    @Published public private(set) var pendingFeedbackRequest: Bool = false
 
     private let configuration: ResolveKitConfiguration
     private let apiClient: ResolveKitAPIClient
@@ -366,6 +369,9 @@ public final class ResolveKitRuntime: ObservableObject {
         lastError = nil
         clearChatPresentationError()
         isTurnInProgress = false
+        isEscalated = false
+        escalationReason = nil
+        pendingFeedbackRequest = false
         resetToolCallFlowForNewTurn()
     }
 
@@ -712,6 +718,29 @@ public final class ResolveKitRuntime: ObservableObject {
         }
 
         await awaitTurnConfirmationOrFail(lastError: lastError, maxAttempts: maxAttempts)
+    }
+
+    /// Submit a CSAT rating (1-5) for the current session, dismissing the pending feedback prompt.
+    public func submitFeedback(rating: Int, comment: String? = nil) async {
+        guard let session else {
+            ResolveKitRuntimeLogger.log("submitFeedback ignored: no active session")
+            return
+        }
+        pendingFeedbackRequest = false
+        do {
+            _ = try await apiClient.submitFeedback(
+                sessionID: session.id,
+                requestBody: ResolveKitFeedbackRequest(rating: rating, comment: comment),
+                chatCapabilityToken: session.chatCapabilityToken
+            )
+        } catch {
+            ResolveKitRuntimeLogger.log("submitFeedback failed: \(error.localizedDescription)")
+        }
+    }
+
+    /// Dismiss the feedback prompt without submitting a rating.
+    public func dismissFeedbackRequest() {
+        pendingFeedbackRequest = false
     }
 
     private func waitForReadyToSendMessage() async -> Bool {
@@ -1130,6 +1159,19 @@ public final class ResolveKitRuntime: ObservableObject {
             activeAssistantDraft = ""
             activeAssistantMessageID = nil
             activeTurnID = nil
+        case "session_escalated":
+            if let payload: ResolveKitSessionEscalatedPayload = decodePayload(envelope.payload) {
+                escalationReason = payload.reason
+            }
+            isEscalated = true
+            isTurnInProgress = false
+            activeTurnID = nil
+        case "human_message":
+            if let payload: ResolveKitHumanMessagePayload = decodePayload(envelope.payload) {
+                messages.append(ResolveKitChatMessage(role: .humanAgent, text: payload.text))
+            }
+        case "feedback_requested":
+            pendingFeedbackRequest = true
         case "error":
             if let payload: ResolveKitServerErrorPayload = decodePayload(envelope.payload) {
                 ResolveKitRuntimeLogger.log(
@@ -1354,6 +1396,8 @@ public final class ResolveKitRuntime: ObservableObject {
                     role = .user
                 case "assistant":
                     role = .assistant
+                case "human_agent":
+                    role = .humanAgent
                 default:
                     role = .system
                 }
