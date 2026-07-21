@@ -1193,12 +1193,22 @@ public final class ResolveKitRuntime: ObservableObject {
             isEscalated = true
             isTurnInProgress = false
             activeTurnID = nil
+            // Suppress any CSAT prompt still pending from the AI's last reply —
+            // it shouldn't surface while the user is waiting on a human handoff.
+            cancelPendingFeedbackPrompt()
+            pendingFeedbackRequest = false
         case "human_message":
             if let payload: ResolveKitHumanMessagePayload = decodePayload(envelope.payload) {
                 messages.append(ResolveKitChatMessage(role: .humanAgent, text: payload.text))
             }
         case "feedback_requested":
-            scheduleFeedbackPrompt()
+            let feedbackPayload: ResolveKitFeedbackRequestedPayload? = decodePayload(envelope.payload)
+            if feedbackPayload?.immediate == true {
+                cancelPendingFeedbackPrompt()
+                pendingFeedbackRequest = true
+            } else {
+                scheduleFeedbackPrompt()
+            }
         case "error":
             if let payload: ResolveKitServerErrorPayload = decodePayload(envelope.payload) {
                 ResolveKitRuntimeLogger.log(

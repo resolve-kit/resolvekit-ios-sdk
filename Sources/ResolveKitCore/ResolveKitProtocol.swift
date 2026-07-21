@@ -143,6 +143,10 @@ public struct ResolveKitSessionEscalatedPayload: Codable, Sendable, Equatable {
     public let reason: String
 }
 
+public struct ResolveKitFeedbackRequestedPayload: Codable, Sendable, Equatable {
+    public let immediate: Bool
+}
+
 public struct ResolveKitHumanMessagePayload: Codable, Sendable, Equatable {
     public let messageID: String
     public let text: String
