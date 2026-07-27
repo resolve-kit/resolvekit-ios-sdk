@@ -206,6 +206,30 @@ public struct ResolveKitToolResultRequest: Codable, Sendable {
     }
 }
 
+public struct ResolveKitFeedbackRequest: Codable, Sendable {
+    public let rating: Int
+    public let comment: String?
+
+    public init(rating: Int, comment: String? = nil) {
+        self.rating = rating
+        self.comment = comment
+    }
+}
+
+public struct ResolveKitFeedbackOut: Codable, Sendable, Equatable {
+    public let id: String
+    public let sessionID: String
+    public let rating: Int
+    public let comment: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case sessionID = "session_id"
+        case rating
+        case comment
+    }
+}
+
 public struct ResolveKitSessionHistoryMessage: Codable, Sendable, Equatable {
     public let id: String
     public let role: String
@@ -374,6 +398,20 @@ public final class ResolveKitAPIClient: Sendable {
             method: "POST",
             body: requestBody,
             responseType: EmptyResponse.self,
+            chatCapabilityToken: chatCapabilityToken
+        )
+    }
+
+    public func submitFeedback(
+        sessionID: String,
+        requestBody: ResolveKitFeedbackRequest,
+        chatCapabilityToken: String
+    ) async throws -> ResolveKitFeedbackOut {
+        try await request(
+            path: "/v1/sessions/\(sessionID)/feedback",
+            method: "POST",
+            body: requestBody,
+            responseType: ResolveKitFeedbackOut.self,
             chatCapabilityToken: chatCapabilityToken
         )
     }

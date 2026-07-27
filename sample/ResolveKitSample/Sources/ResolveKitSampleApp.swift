@@ -483,6 +483,11 @@ struct ChatHostScreen: View {
             ResolveKitChatView(runtime: runtime)
                 .navigationTitle("ResolveKit Chat")
                 .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("New chat") {
+                            Task { await runtime.reloadWithNewSession() }
+                        }
+                    }
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("Done") { dismiss() }
                     }

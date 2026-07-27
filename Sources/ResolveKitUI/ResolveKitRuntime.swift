@@ -208,6 +208,9 @@ public final class ResolveKitRuntime: ObservableObject {
     @Published public private(set) var chatTitle: String = "Support Chat"
     @Published public private(set) var messagePlaceholder: String = "Message"
     @Published public private(set) var initialFetchCompleted = false
+    @Published public private(set) var isEscalated: Bool = false
+    @Published public private(set) var escalationReason: String?
+    @Published public private(set) var pendingFeedbackRequest: Bool = false
 
     private let configuration: ResolveKitConfiguration
     private let apiClient: ResolveKitAPIClient
@@ -244,6 +247,9 @@ public final class ResolveKitRuntime: ObservableObject {
     private static let sendReadyPollIntervalMilliseconds: UInt64 = 100
     private var activeAssistantDraft = ""
     private var activeAssistantMessageID: UUID?
+
+    private var feedbackPromptDelayTask: Task<Void, Never>?
+    private static let feedbackPromptDelaySeconds: Double = 15
 
     private let toolBatchCoalescingDelayMilliseconds: UInt64 = 250
     private var collectingToolCalls: [ResolveKitToolCallRequest] = []
@@ -366,6 +372,10 @@ public final class ResolveKitRuntime: ObservableObject {
         lastError = nil
         clearChatPresentationError()
         isTurnInProgress = false
+        isEscalated = false
+        escalationReason = nil
+        pendingFeedbackRequest = false
+        cancelPendingFeedbackPrompt()
         resetToolCallFlowForNewTurn()
     }
 
@@ -666,6 +676,8 @@ public final class ResolveKitRuntime: ObservableObject {
         activeAssistantDraft = ""
         activeAssistantMessageID = nil
         clearChatPresentationError()
+        cancelPendingFeedbackPrompt()
+        pendingFeedbackRequest = false
         resetToolCallFlowForNewTurn()
 
         do {
@@ -712,6 +724,31 @@ public final class ResolveKitRuntime: ObservableObject {
         }
 
         await awaitTurnConfirmationOrFail(lastError: lastError, maxAttempts: maxAttempts)
+    }
+
+    /// Submit a CSAT rating (1-5) for the current session, dismissing the pending feedback prompt.
+    public func submitFeedback(rating: Int, comment: String? = nil) async {
+        guard let session else {
+            ResolveKitRuntimeLogger.log("submitFeedback ignored: no active session")
+            return
+        }
+        pendingFeedbackRequest = false
+        cancelPendingFeedbackPrompt()
+        do {
+            _ = try await apiClient.submitFeedback(
+                sessionID: session.id,
+                requestBody: ResolveKitFeedbackRequest(rating: rating, comment: comment),
+                chatCapabilityToken: session.chatCapabilityToken
+            )
+        } catch {
+            ResolveKitRuntimeLogger.log("submitFeedback failed: \(error.localizedDescription)")
+        }
+    }
+
+    /// Dismiss the feedback prompt without submitting a rating.
+    public func dismissFeedbackRequest() {
+        pendingFeedbackRequest = false
+        cancelPendingFeedbackPrompt()
     }
 
     private func waitForReadyToSendMessage() async -> Bool {
@@ -1102,6 +1139,25 @@ public final class ResolveKitRuntime: ObservableObject {
         activeAssistantDraft = ""
     }
 
+    /// Show the CSAT prompt only after a short pause with no follow-up message,
+    /// so it doesn't interrupt an in-progress conversation.
+    private func scheduleFeedbackPrompt() {
+        feedbackPromptDelayTask?.cancel()
+        feedbackPromptDelayTask = Task { [weak self] in
+            guard let self else { return }
+            await ResolveKitCompatibility.sleep(seconds: Self.feedbackPromptDelaySeconds)
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                self.pendingFeedbackRequest = true
+            }
+        }
+    }
+
+    private func cancelPendingFeedbackPrompt() {
+        feedbackPromptDelayTask?.cancel()
+        feedbackPromptDelayTask = nil
+    }
+
     private func handleServerEnvelope(_ envelope: ResolveKitEnvelope) async {
         if isReloadingWithNewSession {
             ResolveKitRuntimeLogger.log("Suppressing server envelope during reload: \(envelope.type)")
@@ -1130,6 +1186,29 @@ public final class ResolveKitRuntime: ObservableObject {
             activeAssistantDraft = ""
             activeAssistantMessageID = nil
             activeTurnID = nil
+        case "session_escalated":
+            if let payload: ResolveKitSessionEscalatedPayload = decodePayload(envelope.payload) {
+                escalationReason = payload.reason
+            }
+            isEscalated = true
+            isTurnInProgress = false
+            activeTurnID = nil
+            // Suppress any CSAT prompt still pending from the AI's last reply —
+            // it shouldn't surface while the user is waiting on a human handoff.
+            cancelPendingFeedbackPrompt()
+            pendingFeedbackRequest = false
+        case "human_message":
+            if let payload: ResolveKitHumanMessagePayload = decodePayload(envelope.payload) {
+                messages.append(ResolveKitChatMessage(role: .humanAgent, text: payload.text))
+            }
+        case "feedback_requested":
+            let feedbackPayload: ResolveKitFeedbackRequestedPayload? = decodePayload(envelope.payload)
+            if feedbackPayload?.immediate == true {
+                cancelPendingFeedbackPrompt()
+                pendingFeedbackRequest = true
+            } else {
+                scheduleFeedbackPrompt()
+            }
         case "error":
             if let payload: ResolveKitServerErrorPayload = decodePayload(envelope.payload) {
                 ResolveKitRuntimeLogger.log(
@@ -1354,6 +1433,8 @@ public final class ResolveKitRuntime: ObservableObject {
                     role = .user
                 case "assistant":
                     role = .assistant
+                case "human_agent":
+                    role = .humanAgent
                 default:
                     role = .system
                 }
