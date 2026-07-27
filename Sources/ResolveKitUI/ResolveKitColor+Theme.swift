@@ -1,5 +1,5 @@
-import SwiftUI
 import ResolveKitCore
+import SwiftUI
 
 extension Color {
     init(resolveKitHex: String) {

@@ -13,7 +13,6 @@ struct ResolveKitMacrosPlugin: CompilerPlugin {
 
 /// `@ResolveKit(name:description:timeout:)` — generates Input struct, JSON schema, and dispatch glue.
 public struct ResolveKitMacro: MemberMacro, ExtensionMacro {
-
     // MARK: - MemberMacro: generate stored properties + Input struct + invoke()
 
     public static func expansion(

@@ -118,7 +118,7 @@ struct ResolveKitOpenSourcePackageContractTests {
         #expect(package.contains(".library(name: \"ResolveKitNetworking\", type: .dynamic, targets: [\"ResolveKitNetworking\"])"))
         #expect(package.contains(".library(name: \"ResolveKitUI\", type: .dynamic, targets: [\"ResolveKitUI\"])"))
         #expect(package.contains(".target(\n            name: \"ResolveKitCore\""))
-        #expect(package.contains(".target(\n            name: \"ResolveKitAuthoring\",\n            dependencies: [\n                \"ResolveKitCore\",\n                \"ResolveKitMacros\"\n            ]\n        )"))
+        #expect(package.contains(".target(\n            name: \"ResolveKitAuthoring\",\n            dependencies: [\n                \"ResolveKitCore\",\n                \"ResolveKitMacros\",\n            ]\n        )"))
         #expect(!package.contains(".target(\n            name: \"ResolveKitCore\",\n            dependencies: [\n                \"ResolveKitMacros\"\n            ]\n        )"))
     }
 

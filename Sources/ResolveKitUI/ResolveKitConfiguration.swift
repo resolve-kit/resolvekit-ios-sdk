@@ -46,7 +46,7 @@ enum ResolveKitClientInfoProvider {
             "os_version": "\(operatingSystemVersion.majorVersion).\(operatingSystemVersion.minorVersion).\(operatingSystemVersion.patchVersion)",
             "app_version": infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0",
             "sdk_name": ResolveKitDefaults.sdkName,
-            "sdk_version": ResolveKitDefaults.sdkVersion
+            "sdk_version": ResolveKitDefaults.sdkVersion,
         ]
         if let appBuild = infoDictionary?["CFBundleVersion"] as? String, !appBuild.isEmpty {
             payload["app_build"] = appBuild

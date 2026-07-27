@@ -7,7 +7,7 @@ public enum JSONSchemaBuilder {
         [
             "type": .string("object"),
             "properties": .object([:]),
-            "required": .array([])
+            "required": .array([]),
         ]
     }
 

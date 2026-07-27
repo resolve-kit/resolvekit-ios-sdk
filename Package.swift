@@ -1,19 +1,19 @@
 // swift-tools-version: 5.9
-import PackageDescription
 import CompilerPluginSupport
+import PackageDescription
 
 let package = Package(
     name: "ResolveKit",
     platforms: [
         .iOS(.v16),
-        .macOS(.v12)
+        .macOS(.v12),
     ],
     products: [
         .library(name: "ResolveKitCore", targets: ["ResolveKitCore"]),
         .library(name: "ResolveKitAuthoring", targets: ["ResolveKitAuthoring"]),
         .library(name: "ResolveKitNetworking", type: .dynamic, targets: ["ResolveKitNetworking"]),
         .library(name: "ResolveKitUI", type: .dynamic, targets: ["ResolveKitUI"]),
-        .plugin(name: "ResolveKitPlugin", targets: ["ResolveKitPlugin"])
+        .plugin(name: "ResolveKitPlugin", targets: ["ResolveKitPlugin"]),
     ],
     dependencies: [
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "509.0.0")
@@ -26,7 +26,7 @@ let package = Package(
             name: "ResolveKitAuthoring",
             dependencies: [
                 "ResolveKitCore",
-                "ResolveKitMacros"
+                "ResolveKitMacros",
             ]
         ),
         .target(
@@ -39,7 +39,7 @@ let package = Package(
             name: "ResolveKitUI",
             dependencies: [
                 "ResolveKitCore",
-                "ResolveKitNetworking"
+                "ResolveKitNetworking",
             ]
         ),
         .macro(
@@ -49,7 +49,7 @@ let package = Package(
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
-                .product(name: "SwiftDiagnostics", package: "swift-syntax")
+                .product(name: "SwiftDiagnostics", package: "swift-syntax"),
             ]
         ),
         .executableTarget(
@@ -70,13 +70,13 @@ let package = Package(
             dependencies: [
                 "ResolveKitAuthoring",
                 "ResolveKitMacros",
-                .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax")
+                .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
             ]
         ),
         .testTarget(
             name: "ResolveKitIntegrationTests",
             dependencies: ["ResolveKitCore", "ResolveKitUI", "ResolveKitNetworking"]
-        )
+        ),
     ],
     swiftLanguageVersions: [.v5]
 )

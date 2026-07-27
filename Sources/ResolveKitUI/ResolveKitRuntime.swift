@@ -937,12 +937,12 @@ public final class ResolveKitRuntime: ObservableObject {
                 if let name = request(forCallID: callID)?.functionName {
                     executionLog.append("Success: \(name)")
                 }
-            case .failed(let callID, let error):
+            case let .failed(callID, error):
                 updateChecklistStatus(for: [callID], to: .failed(error: error))
                 if let name = request(forCallID: callID)?.functionName {
                     executionLog.append("Error: \(name) - \(error)")
                 }
-            case .cancelled(let callID, let reason):
+            case let .cancelled(callID, reason):
                 updateChecklistStatus(for: [callID], to: .cancelled(reason: reason))
                 if let name = request(forCallID: callID)?.functionName {
                     executionLog.append("Cancelled: \(name)\(reason.map { " - \($0)" } ?? "")")
@@ -985,12 +985,12 @@ public final class ResolveKitRuntime: ObservableObject {
 
             for await event in group {
                 switch event {
-                case .cancelled(let callID, let reason):
+                case let .cancelled(callID, reason):
                     updateChecklistStatus(for: [callID], to: .cancelled(reason: reason))
                     if let name = request(forCallID: callID)?.functionName {
                         executionLog.append("Denied: \(name)\(reason.map { " - \($0)" } ?? "")")
                     }
-                case .failed(let callID, let error):
+                case let .failed(callID, error):
                     updateChecklistStatus(for: [callID], to: .failed(error: error))
                     if let name = request(forCallID: callID)?.functionName {
                         executionLog.append("Error: \(name) - \(error)")
@@ -1018,7 +1018,7 @@ public final class ResolveKitRuntime: ObservableObject {
         await declineToolCallBatch()
     }
 
-    private nonisolated func recordSSEHeartbeat() {
+    nonisolated private func recordSSEHeartbeat() {
         Task { @MainActor in
             self.lastSSEDataReceivedAt = Date()
         }
@@ -1056,9 +1056,8 @@ public final class ResolveKitRuntime: ObservableObject {
         let stream = try await eventStreamClient.stream(
             eventsPath: eventsPath,
             chatCapabilityToken: session?.chatCapabilityToken ?? "",
-            cursor: cursor,
-            onHeartbeat: { [weak self] in self?.recordSSEHeartbeat() }
-        )
+            cursor: cursor
+        ) { [weak self] in self?.recordSSEHeartbeat() }
         let isReconnectWithTurnInProgress = session != nil && isTurnInProgress
         connectionState = didReuseActiveSession || cursor != nil ? .reconnected : .active
         clearChatPresentationError()
@@ -1330,7 +1329,7 @@ public final class ResolveKitRuntime: ObservableObject {
     }
 
     private func request(forCallID callID: String) -> ResolveKitToolCallRequest? {
-        activeBatchRequests.first(where: { $0.callID == callID })
+        activeBatchRequests.first { $0.callID == callID }
     }
 
     private func syncPendingToolCallCompatibility() {
@@ -1647,7 +1646,7 @@ public final class ResolveKitRuntime: ObservableObject {
     private func reconcileInitialMessageAfterReuse(expected: String) {
         let trimmed = expected.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
-        let hasUserMessages = messages.contains(where: { $0.role == .user })
+        let hasUserMessages = messages.contains { $0.role == .user }
         guard !hasUserMessages else { return }
         if messages.isEmpty {
             messages.append(.init(role: .assistant, text: trimmed))

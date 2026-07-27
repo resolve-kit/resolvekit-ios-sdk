@@ -4,7 +4,7 @@ enum ResolveKitLocaleResolver {
     private static let supportedCodes: Set<String> = [
         "ar", "bg", "bn", "bs", "ca", "cs", "da", "de", "el", "en", "en-gb", "es", "es-ar", "et", "fa", "fi",
         "fr", "hi", "he", "hr", "hu", "id", "it", "lv", "ms", "no", "ja", "ko", "nl", "pl", "pt", "pt-br", "ro",
-        "ru", "sk", "sq", "sr", "sv", "sw", "th", "tr", "tl", "uk", "ur", "vi", "zh", "zh-tw", "zh-cn", "lt"
+        "ru", "sk", "sq", "sr", "sv", "sw", "th", "tr", "tl", "uk", "ur", "vi", "zh", "zh-tw", "zh-cn", "lt",
     ]
 
     private static let aliases: [String: String] = [

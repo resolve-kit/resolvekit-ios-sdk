@@ -18,7 +18,7 @@ struct ResolveKitPlugin: BuildToolPlugin {
                 arguments: [swiftTarget.directory.string, output.string],
                 inputFiles: swiftTarget.sourceFiles(withSuffix: ".swift").map(\.path),
                 outputFiles: [output]
-            )
+            ),
         ]
     }
 }

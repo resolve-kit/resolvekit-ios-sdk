@@ -46,7 +46,7 @@ public final class ResolveKitChatViewController: UIHostingController<ResolveKitC
         fatalError("init(coder:) has not been implemented")
     }
 
-    public override func viewWillAppear(_ animated: Bool) {
+    override public func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         applyNavigationChrome()
     }

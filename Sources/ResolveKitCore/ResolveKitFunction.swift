@@ -22,6 +22,7 @@ public protocol AnyResolveKitFunction: Sendable {
     static var resolveKitParametersSchema: JSONObject { get }
 
     static var definition: ResolveKitDefinition { get }
+
     static func invoke(arguments: JSONObject, context: ResolveKitFunctionContext) async throws -> JSONValue
 }
 

@@ -1,7 +1,7 @@
-import SwiftUI
-import ResolveKitUI
-import ResolveKitCore
 import ResolveKitAuthoring
+import ResolveKitCore
+import ResolveKitUI
+import SwiftUI
 
 private let managedHostURL = "https://agent.resolvekit.app"
 
@@ -63,7 +63,7 @@ struct DemoAppState: Sendable, Equatable {
             "accent": .string(accent),
             "mascot": .string(mascot),
             "confetti_bursts": .number(Double(confettiBursts)),
-            "lasers_armed": .bool(lasersArmed)
+            "lasers_armed": .bool(lasersArmed),
         ])
     }
 }
@@ -129,7 +129,7 @@ enum SetDemoVibe: AnyResolveKitFunction {
         "properties": .object([
             "vibe": .object(["type": .string("string")])
         ]),
-        "required": .array([.string("vibe")])
+        "required": .array([.string("vibe")]),
     ]
 
     static func invoke(arguments: JSONObject, context: ResolveKitFunctionContext) async throws -> JSONValue {
@@ -149,7 +149,7 @@ enum LaunchConfetti: AnyResolveKitFunction {
         "properties": .object([
             "power": .object(["type": .string("integer")])
         ]),
-        "required": .array([.string("power")])
+        "required": .array([.string("power")]),
     ]
 
     static func invoke(arguments: JSONObject, context: ResolveKitFunctionContext) async throws -> JSONValue {
@@ -169,7 +169,7 @@ enum RenameMascot: AnyResolveKitFunction {
         "properties": .object([
             "name": .object(["type": .string("string")])
         ]),
-        "required": .array([.string("name")])
+        "required": .array([.string("name")]),
     ]
 
     static func invoke(arguments: JSONObject, context: ResolveKitFunctionContext) async throws -> JSONValue {
@@ -189,7 +189,7 @@ enum ArmLasers: AnyResolveKitFunction {
         "properties": .object([
             "enabled": .object(["type": .string("boolean")])
         ]),
-        "required": .array([.string("enabled")])
+        "required": .array([.string("enabled")]),
     ]
 
     static func invoke(arguments: JSONObject, context: ResolveKitFunctionContext) async throws -> JSONValue {
@@ -206,7 +206,7 @@ enum GetShowcaseState: AnyResolveKitFunction {
     static let resolveKitRequiresApproval = false
     static let resolveKitParametersSchema: JSONObject = [
         "type": .string("object"),
-        "properties": .object([:])
+        "properties": .object([:]),
     ]
 
     static func invoke(arguments: JSONObject, context: ResolveKitFunctionContext) async throws -> JSONValue {
@@ -224,7 +224,7 @@ enum SampleDemoFunctionPack: ResolveKitFunctionPack {
         RenameMascot.self,
         ArmLasers.self,
         GetShowcaseState.self,
-        EchoMessage.self
+        EchoMessage.self,
     ]
 }
 
@@ -235,7 +235,7 @@ enum SampleRuntimeFactory {
         "rename_mascot",
         "arm_lasers",
         "get_showcase_state",
-        "echo_message"
+        "echo_message",
     ]
 
     @MainActor
@@ -249,7 +249,7 @@ enum SampleRuntimeFactory {
             llmContextProvider: {
                 [
                     "app_name": .string("ResolveKit iOS Sample"),
-                    "demo_goal": .string("Call tools to change visible app state")
+                    "demo_goal": .string("Call tools to change visible app state"),
                 ]
             },
             availableFunctionNamesProvider: { availableFunctionNames },
@@ -272,7 +272,7 @@ private let toolGuides: [ToolGuide] = [
     .init(functionName: "rename_mascot", prompt: "Rename mascot to Laser Panda.", expected: "Mascot name changes on screen."),
     .init(functionName: "arm_lasers (approval required)", prompt: "Arm lasers.", expected: "Approval appears, then laser state flips."),
     .init(functionName: "get_showcase_state", prompt: "Show current showcase state.", expected: "Assistant returns vibe/mascot/confetti/laser values."),
-    .init(functionName: "echo_message (macro)", prompt: "Echo this exactly: ResolveKit is rad.", expected: "Assistant returns the same text.")
+    .init(functionName: "echo_message (macro)", prompt: "Echo this exactly: ResolveKit is rad.", expected: "Assistant returns the same text."),
 ]
 
 enum SampleStep {
@@ -300,9 +300,8 @@ struct ResolveKitSampleApp: App {
                     )
                 case .capabilities:
                     CapabilitiesScreen(
-                        settings: settings,
-                        onBack: { step = .configuration }
-                    )
+                        settings: settings
+                    ) { step = .configuration }
                 }
             }
         }

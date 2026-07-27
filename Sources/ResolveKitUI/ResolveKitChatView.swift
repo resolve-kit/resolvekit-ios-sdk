@@ -1,5 +1,5 @@
-import SwiftUI
 import ResolveKitCore
+import SwiftUI
 #if os(iOS)
 import UIKit
 #elseif os(macOS)
@@ -180,21 +180,21 @@ struct ResolveKitChatInitialScrollPlan {
     static let initialPresentation = ResolveKitChatInitialScrollPlan(
         steps: [
             Step(delayMilliseconds: 200, animated: true),
-            Step(delayMilliseconds: 420, animated: true)
+            Step(delayMilliseconds: 420, animated: true),
         ]
     )
 
     static let messageUpdate = ResolveKitChatInitialScrollPlan(
         steps: [
             Step(delayMilliseconds: 20, animated: true),
-            Step(delayMilliseconds: 140, animated: true)
+            Step(delayMilliseconds: 140, animated: true),
         ]
     )
 
     static let keyboardDismiss = ResolveKitChatInitialScrollPlan(
         steps: [
             Step(delayMilliseconds: 0, animated: true),
-            Step(delayMilliseconds: 120, animated: true)
+            Step(delayMilliseconds: 120, animated: true),
         ]
     )
 }
@@ -481,7 +481,7 @@ public struct ResolveKitChatView: View {
                     stops: [
                         .init(color: resolvedPalette.screenBackgroundColor.opacity(0.34), location: 0),
                         .init(color: resolvedPalette.screenBackgroundColor.opacity(0.16), location: 0.45),
-                        .init(color: resolvedPalette.screenBackgroundColor.opacity(0), location: 1)
+                        .init(color: resolvedPalette.screenBackgroundColor.opacity(0), location: 1),
                     ],
                     startPoint: .top,
                     endPoint: .bottom
@@ -492,7 +492,7 @@ public struct ResolveKitChatView: View {
                     stops: [
                         .init(color: .black.opacity(0.95), location: 0),
                         .init(color: .black.opacity(0.72), location: 0.45),
-                        .init(color: .clear, location: 1)
+                        .init(color: .clear, location: 1),
                     ],
                     startPoint: .top,
                     endPoint: .bottom

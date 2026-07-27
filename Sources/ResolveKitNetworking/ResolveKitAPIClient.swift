@@ -22,9 +22,9 @@ public enum ResolveKitAPIClientError: Error, LocalizedError {
             return "Invalid server response"
         case .chatUnavailable:
             return "Chat is unavailable, try again later"
-        case .serverError(let statusCode, let message):
+        case let .serverError(statusCode, message):
             return "Server error (\(statusCode)): \(message)"
-        case .methodNotAllowed(let method, let path, let payload, let response):
+        case let .methodNotAllowed(method, path, payload, response):
             return "405 Method Not Allowed for \(method) \(path). Payload: \(payload). Response: \(response)"
         }
     }
@@ -470,8 +470,8 @@ public final class ResolveKitAPIClient: Sendable {
             throw errorFromHTTPFailure(statusCode: http.statusCode, responseBody: responseBody)
         }
 
-        if Response.self == EmptyResponse.self {
-            return EmptyResponse() as! Response
+        if Response.self == EmptyResponse.self, let empty = EmptyResponse() as? Response {
+            return empty
         }
         return try JSONDecoder().decode(Response.self, from: data)
     }
