@@ -249,7 +249,7 @@ public final class ResolveKitRuntime: ObservableObject {
     private var activeAssistantMessageID: UUID?
 
     private var feedbackPromptDelayTask: Task<Void, Never>?
-    private static let feedbackPromptDelaySeconds: Double = 6
+    private static let feedbackPromptDelaySeconds: Double = 15
 
     private let toolBatchCoalescingDelayMilliseconds: UInt64 = 250
     private var collectingToolCalls: [ResolveKitToolCallRequest] = []
