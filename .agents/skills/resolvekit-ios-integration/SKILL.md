@@ -28,12 +28,12 @@ File -> Add Package Dependencies -> URL:
 ```
 https://github.com/resolve-kit/resolvekit-ios-sdk
 ```
-Select version `1.4.2` or later. Add `ResolveKitUI` product to your app target.
+Select version `1.5.0` or later. Add `ResolveKitUI` product to your app target.
 
 ### Package.swift
 ```swift
 dependencies: [
-    .package(url: "https://github.com/resolve-kit/resolvekit-ios-sdk", from: "1.4.2")
+    .package(url: "https://github.com/resolve-kit/resolvekit-ios-sdk", from: "1.5.0")
 ],
 targets: [
     .target(

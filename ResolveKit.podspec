@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'ResolveKit'
-  s.version          = '1.4.2'
+  s.version          = '1.5.0'
   s.summary          = 'Embed AI resolution agents natively inside your iOS app'
   s.description      = <<-DESC
     ResolveKit is a Swift SDK for embedding LLM-driven agent chat experiences

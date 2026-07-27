@@ -16,7 +16,7 @@ public enum ResolveKitDefaults {
 
     public static let baseURL = resolveBaseURL()
     public static let sdkName = "resolvekit-ios-sdk"
-    public static let sdkVersion = "1.4.2"
+    public static let sdkVersion = "1.5.0"
 }
 
 enum ResolveKitClientInfoProvider {

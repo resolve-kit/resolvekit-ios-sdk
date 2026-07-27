@@ -88,7 +88,7 @@ Or add it manually to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/resolve-kit/resolvekit-ios-sdk", from: "1.4.2")
+    .package(url: "https://github.com/resolve-kit/resolvekit-ios-sdk", from: "1.5.0")
 ],
 targets: [
     .target(
