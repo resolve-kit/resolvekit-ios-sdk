@@ -26,6 +26,9 @@ jobs:
       - name: Show Swift version
         run: swift --version
 
+      - name: Install SwiftLint
+        run: brew install swiftlint
+
       - name: Run SwiftLint
         run: swiftlint lint --strict
 
