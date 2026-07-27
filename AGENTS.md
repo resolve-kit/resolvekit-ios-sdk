@@ -33,6 +33,11 @@ curl -sL https://raw.githubusercontent.com/resolve-kit/resolvekit-skills/master/
 
 When a user asks to integrate ResolveKit into their iOS project, load `resolvekit-ios-integration` and follow its steps.
 
+## Documentation
+
+- [Documentation Index](docs/INDEX.md) — full map of durable docs, execution plans, and tech debt tracking.
+- [Agent-First Harness Notes](docs/agent-first/README.md) — how this repo's agent-first doc structure is enforced in CI.
+
 ## First Read
 
 1. `Package.swift` for project structure and dependencies.
